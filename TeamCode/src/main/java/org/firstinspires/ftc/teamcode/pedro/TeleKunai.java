@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedro.procedures;
+package org.firstinspires.ftc.teamcode.pedro;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 
@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-@TeleOp(name = "KunaiTele", group = "KunaiTele")
+@TeleOp(name = "TeleKunai", group = "TeleKunai")
 //@Disabled
 public class TeleKunai extends OpMode {
 
