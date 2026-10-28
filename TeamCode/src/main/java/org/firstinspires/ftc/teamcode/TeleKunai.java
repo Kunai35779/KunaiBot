@@ -12,10 +12,10 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 @TeleOp(name = "TeleKunai", group = "TeleKunai")
 public class TeleKunai extends OpMode {
 
-    private DcMotor fl = null;
-    private DcMotor fr = null;
-    private DcMotor bl = null;
-    private DcMotor br = null;
+    private DcMotor leftFront = null;
+    private DcMotor rightFront = null;
+    private DcMotor leftBack = null;
+    private DcMotor rightBack = null;
 
     private DcMotorEx launcher = null;
     private DcMotor intake = null;
@@ -26,18 +26,16 @@ public class TeleKunai extends OpMode {
     public final int LAUNCHER_TARGET_VELOCITY = 1250;
     public final int LAUNCHER_MIN_VELOCITY = 1200;
 
-    double flPower;
-    double frPower;
-    double blPower;
-    double brPower;
+    double leftPower;
+    double rightPower;
     double intakePower;
 
     @Override
     public void init() {
-        fl = hardwareMap.get(DcMotor.class, "fl");
-        fr = hardwareMap.get(DcMotor.class, "fr");
-        bl = hardwareMap.get(DcMotor.class, "bl");
-        br = hardwareMap.get(DcMotor.class, "br");
+        leftFront = hardwareMap.get(DcMotor.class, "fl");
+        rightFront = hardwareMap.get(DcMotor.class, "fr");
+        leftBack = hardwareMap.get(DcMotor.class, "bl");
+        rightBack = hardwareMap.get(DcMotor.class, "br");
 
         intake = hardwareMap.get(DcMotor.class, "intake");
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
@@ -45,15 +43,15 @@ public class TeleKunai extends OpMode {
         leftIntakeServo = hardwareMap.get(CRServo.class, "left_intake_servo");
         rightIntakeServo = hardwareMap.get(CRServo.class, "right_intake_servo");
 
-        fl.setDirection(DcMotor.Direction.FORWARD);
-        bl.setDirection(DcMotor.Direction.FORWARD);
-        fr.setDirection(DcMotor.Direction.REVERSE);
-        rb.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setDirection(DcMotor.Direction.FORWARD);
+        leftBack.setDirection(DcMotor.Direction.FORWARD);
+        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        rightBack.setDirection(DcMotor.Direction.REVERSE);
 
-        fl.setZeroPowerBehavior(BRAKE);
-        bl.setZeroPowerBehavior(BRAKE);
-        fr.setZeroPowerBehavior(BRAKE);
-        br.setZeroPowerBehavior(BRAKE);
+        leftFront.setZeroPowerBehavior(BRAKE);
+        leftBack.setZeroPowerBehavior(BRAKE);
+        rightFront.setZeroPowerBehavior(BRAKE);
+        rightBack.setZeroPowerBehavior(BRAKE);
         intake.setZeroPowerBehavior(BRAKE);
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -101,10 +99,10 @@ public class TeleKunai extends OpMode {
         leftPower = forward + rotate;
         rightPower = forward - rotate;
 
-        fl.setPower(flPower);
-        bl.setPower(blPower);
-        fr.setPower(frPower);
-        br.setPower(brPower);
+        leftFront.setPower(leftPower);
+        leftBack.setPower(leftPower);
+        rightFront.setPower(rightPower);
+        rightBack.setPower(rightPower);
     }
 
     void launch() {
