@@ -1,0 +1,48 @@
+package org.firstinspires.ftc.teamcode;
+
+import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+@TeleOp(name = "Intake", group = "BioBuzz")
+public class Intake extends OpMode {
+
+    private DcMotor intake;
+    private CRServo ls, rs;
+
+    @Override
+    public void init() {
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        ls = hardwareMap.get(CRServo.class, "left_intake_servo");
+        rs = hardwareMap.get(CRServo.class, "right_intake_servo");
+
+        intake.setZeroPowerBehavior(BRAKE);
+
+        rs.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        telemetry.addData("Status", "Initialized");
+    }
+
+    @Override
+    public void loop() {
+        double intakePower = gamepad1.left_trigger;
+
+        intake.setPower(intakePower);
+        ls.setPower(intakePower);
+        rs.setPower(intakePower);
+
+        telemetry.addData("Intake power", "%.2f", intakePower);
+        telemetry.update();
+    }
+
+    @Override
+    public void stop() {
+        intake.setPower(0);
+        ls.setPower(0);
+        rs.setPower(0);
+    }
+}
