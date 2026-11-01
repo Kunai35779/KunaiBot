@@ -1,66 +1,90 @@
+
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-
-@TeleOp(name = "FC_Test")
-
-public class FC_Test extends OpMode {
+@TeleOp(name = "DT", group = "BioBuzz")
+public class DT extends OpMode {
+    // Drivetrain
     private DcMotor fl, bl, fr, br;
-    private IMU imu;
-    private final double  maxSpeed = 1.0;
+    // private IMU imu;
+    private final double maxSpeed = 1.0;
+
+    private static final double FRONT_OFFSET = Math.PI;
+
+    // Intake
+    private DcMotor intake;
+    private CRServo ls, rs;
+
+    private CRServo transfer;
+
+    private DcMotor shooter;
 
     @Override
     public void init() {
-        fl  = hardwareMap.get(DcMotor.class, "fl");
-        bl   = hardwareMap.get(DcMotor.class, "bl");
+        // DT:
+        fl = hardwareMap.get(DcMotor.class, "fl");
+        bl = hardwareMap.get(DcMotor.class, "bl");
         fr = hardwareMap.get(DcMotor.class, "fr");
-        br  = hardwareMap.get(DcMotor.class, "br");
+        br = hardwareMap.get(DcMotor.class, "br");
 
         fl.setDirection(DcMotorSimple.Direction.REVERSE);
-        bl.setDirection(DcMotorSimple.Direction.FORWARD);
-        fr.setDirection(DcMotor.Direction.REVERSE);
-        br.setDirection(DcMotor.Direction.REVERSE);
+        bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        fr.setDirection(DcMotorSimple.Direction.FORWARD);
+        br.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        fl.setZeroPowerBehavior(BRAKE);
+        bl.setZeroPowerBehavior(BRAKE);
+        fr.setZeroPowerBehavior(BRAKE);
+        br.setZeroPowerBehavior(BRAKE);
 
         fl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         bl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         fr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         br.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        imu = hardwareMap.get(IMU.class, "imu");
+        // Int
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        ls = hardwareMap.get(CRServo.class, "ls");
+        rs = hardwareMap.get(CRServo.class, "rs");
 
-        RevHubOrientationOnRobot revOrientation = new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP
-        );
+        ls.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        imu.initialize(new IMU.Parameters(revOrientation));
+        telemetry.addData("Status", "Initialized");
+
+        //Transfer
+        transfer = hardwareMap.get(CRServo.class, "transfer");
+
+        telemetry.addData("Initialized", "Transfer");
+
+        //Shooter
+        shooter = hardwareMap.get(DcMotor.class,"shooter");
+
+        shooter.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        telemetry.addData("Shooter", "Initialized");
     }
 
     @Override
     public void loop() {
-        double y = gamepad1.left_stick_y;
+
+        // FC
+        double y = -gamepad1.left_stick_y;
         double x = -gamepad1.left_stick_x;
-        double rx = gamepad1.right_stick_x;
+        double rx = -gamepad1.right_stick_x;
 
-        double theta = Math.atan2(y, x);
-        double r = Math.hypot(x, y);
 
-        double robotYaw = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-        theta = AngleUnit.normalizeRadians(theta - robotYaw);
-
-        double newy = r * Math.sin(theta);
-        double newx = r * Math.cos(theta);
-        double flPower  = newy + newx + rx;
-        double blPower  = newy - newx + rx;
-        double frPower  = newy - newx - rx;
-        double brPower  = newy + newx - rx;
+        // New
+        double flPower = y + x + rx;
+        double blPower = y - x + rx;
+        double frPower = y - x - rx;
+        double brPower = y + x - rx;
 
         double maxPower = 1.0;
         maxPower = Math.max(maxPower, Math.abs(flPower));
@@ -72,5 +96,28 @@ public class FC_Test extends OpMode {
         bl.setPower(maxSpeed * (blPower / maxPower));
         fr.setPower(maxSpeed * (frPower / maxPower));
         br.setPower(maxSpeed * (brPower / maxPower));
+
+        // Int
+        double intakePower = 1.0;
+
+
+
+        intake.setPower(intakePower);
+        ls.setPower(intakePower);
+        rs.setPower(intakePower);
+
+        //Transfer
+        double transfer_power = gamepad1.left_trigger;
+
+        transfer.setPower(transfer_power);
+
+        //Shooter
+        double shooter_power = 0.65;
+
+        shooter.setPower(shooter_power);
+
+
     }
+
+
 }
