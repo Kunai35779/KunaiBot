@@ -1,0 +1,147 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+
+@Autonomous(name = "Auton", group = "BioBuzz")
+public class Auton extends LinearOpMode {
+
+    private static final double ticks = 537.7;
+    private static final double diameter = 4.0944;
+    private static final double distance = 50.0;
+    private static final double d_power = 1.0;
+
+    private static final double velo = 600;   // ticks per second
+    private static final double kP = 10.0, kI = 3.0, kD = 0.0, kF = 12.0;
+
+    private static final double transfer_power = 1.0;
+    private static final double intake_power = 1.0;
+
+    private static final double TICKS_PER_INCH =
+            ticks / (Math.PI * diameter);
+
+    private DcMotor fl, bl, fr, br;
+    private DcMotorEx shooter;
+    private DcMotor intake;
+    private CRServo ls, rs, transfer;
+
+    @Override
+    public void runOpMode() {
+        fl = hardwareMap.get(DcMotor.class, "fl");
+        bl = hardwareMap.get(DcMotor.class, "bl");
+        fr = hardwareMap.get(DcMotor.class, "fr");
+        br = hardwareMap.get(DcMotor.class, "br");
+
+        fl.setDirection(DcMotorSimple.Direction.REVERSE);
+        bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        fr.setDirection(DcMotorSimple.Direction.FORWARD);
+        br.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        for (DcMotor m : new DcMotor[]{fl, bl, fr, br}) {
+            m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        }
+
+        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
+        shooter.setDirection(DcMotorSimple.Direction.FORWARD);
+        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(kP, kI, kD, kF));
+
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        ls = hardwareMap.get(CRServo.class, "ls");
+        rs = hardwareMap.get(CRServo.class, "rs");
+        ls.setDirection(DcMotorSimple.Direction.REVERSE);
+        transfer = hardwareMap.get(CRServo.class, "transfer");
+
+        telemetry.addData("Status", "Ready");
+        telemetry.update();
+        waitForStart();
+
+        if (opModeIsActive()) {
+            runMechanisms();
+
+            driveInches(distance);    // forward 50
+            driveInches(-distance);   // back to start
+        }
+
+        // Cont shooter,intake and transfer
+        while (opModeIsActive()) {
+            runMechanisms();
+            telemetry.addData("Shooter vel", "%.0f / %.0f", shooter.getVelocity(), velo);
+            telemetry.update();
+        }
+
+        stopAll();
+    }
+
+    private void runMechanisms() {
+        shooter.setVelocity(velo);
+        transfer.setPower(transfer_power);
+        intake.setPower(intake_power);
+        ls.setPower(intake_power);
+        rs.setPower(intake_power);
+    }
+
+    // Positive = forward, negative = backward
+    private void driveInches(double inches) {
+        int ticks = (int) Math.round(inches * TICKS_PER_INCH);
+
+        fl.setTargetPosition(fl.getCurrentPosition() + ticks);
+        bl.setTargetPosition(bl.getCurrentPosition() + ticks);
+        fr.setTargetPosition(fr.getCurrentPosition() + ticks);
+        br.setTargetPosition(br.getCurrentPosition() + ticks);
+
+        fl.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        bl.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        fr.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        br.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        fl.setPower(d_power);
+        bl.setPower(d_power);
+        fr.setPower(d_power);
+        br.setPower(d_power);
+
+        while (opModeIsActive()
+                && (fl.isBusy() || bl.isBusy() || fr.isBusy() || br.isBusy())) {
+            runMechanisms(); // shooter, transfer and intake never stop while driving
+            telemetry.addData("Driving (in)", "%.1f", inches);
+            telemetry.addData("Shooter vel", "%.0f / %.0f", shooter.getVelocity(), velo);
+            telemetry.update();
+        }
+
+        fl.setPower(0);
+        bl.setPower(0);
+        fr.setPower(0);
+        br.setPower(0);
+
+        fl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        fr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        br.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Short settle, still running the mechanisms
+        long end = System.currentTimeMillis() + 250;
+        while (opModeIsActive() && System.currentTimeMillis() < end) {
+            runMechanisms();
+        }
+    }
+
+    private void stopAll() {
+        fl.setPower(0);
+        bl.setPower(0);
+        fr.setPower(0);
+        br.setPower(0);
+        shooter.setPower(0);
+        intake.setPower(0);
+        ls.setPower(0);
+        rs.setPower(0);
+        transfer.setPower(0);
+    }
+}
